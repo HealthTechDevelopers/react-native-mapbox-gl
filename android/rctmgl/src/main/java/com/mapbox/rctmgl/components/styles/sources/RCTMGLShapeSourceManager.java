@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
+import android.view.View;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
@@ -46,6 +47,26 @@ public class RCTMGLShapeSourceManager extends ViewGroupManager<RCTMGLShapeSource
         return new RCTMGLShapeSource(reactContext);
     }
 
+    @Override
+    public View getChildAt(RCTMGLShapeSource source, int childPosition) {
+        return source.getLayerAt(childPosition);
+    }
+
+    @Override
+    public int getChildCount(RCTMGLShapeSource source) {
+        return source.getLayerCount();
+    }
+
+    @Override
+    public void addView(RCTMGLShapeSource source, View childView, int childPosition) {
+        source.addLayer(childView, childPosition);
+    }
+
+    @Override
+    public void removeViewAt(RCTMGLShapeSource source, int childPosition) {
+        source.removeLayer(childPosition);
+    }
+
     @ReactProp(name="id")
     public void setId(RCTMGLShapeSource source, String id) {
         source.setID(id);
@@ -75,13 +96,13 @@ public class RCTMGLShapeSourceManager extends ViewGroupManager<RCTMGLShapeSource
         source.setClusterRadius(radius);
     }
 
-    @ReactProp(name="clusterMaxZoom")
-    public void setClusterMaxZoom(RCTMGLShapeSource source, int clusterMaxZoom) {
+    @ReactProp(name="clusterMaxZoomLevel")
+    public void setClusterMaxZoomLevel(RCTMGLShapeSource source, int clusterMaxZoom) {
         source.setClusterMaxZoom(clusterMaxZoom);
     }
 
-    @ReactProp(name="maxZoom")
-    public void setMaxZoom(RCTMGLShapeSource source, int maxZoom) {
+    @ReactProp(name="maxZoomLevel")
+    public void setMaxZoomLevel(RCTMGLShapeSource source, int maxZoom) {
         source.setMaxZoom(maxZoom);
     }
 

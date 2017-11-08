@@ -76,7 +76,9 @@
     _reactStyle = reactStyle;
     
     if (_styleLayer != nil) {
-        [self addStyles];
+        dispatch_async(dispatch_get_main_queue(), ^{
+           [self addStyles];
+        });
     }
 }
 
@@ -84,9 +86,12 @@
 {
     _style = style;
     
-    if ([RCTMGLSource isDefaultSource:_sourceID]) {
-        _styleLayer = [style layerWithIdentifier:_id];
-    } else {
+    MGLStyleLayer *existingLayer = [style layerWithIdentifier:_id];
+    if (existingLayer != nil) {
+        _styleLayer = existingLayer;
+    }
+    
+    if (_styleLayer == nil) {
         _styleLayer = [self makeLayer:style];
         [self insertLayer];
     }
@@ -115,6 +120,10 @@
 
 - (void)insertLayer
 {
+    if ([_style layerWithIdentifier:_id] != nil) {
+        return; // prevent layer from being added twice
+    }
+
     if (_aboveLayerID != nil) {
         [self insertAbove:[_style layerWithIdentifier:_aboveLayerID]];
     } else if (_belowLayerID != nil) {

@@ -10,6 +10,9 @@ import com.mapbox.rctmgl.components.AbstractMapFeature;
 import com.mapbox.rctmgl.components.mapview.RCTMGLMapView;
 import com.mapbox.rctmgl.components.styles.layers.RCTLayer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by nickitaliano on 9/7/17.
  */
@@ -23,12 +26,12 @@ public abstract class RCTSource<T extends Source> extends AbstractMapFeature {
     protected String mID;
     protected Source mSource;
 
-    protected SparseArray<RCTLayer> mLayers;
+    protected List<RCTLayer> mLayers;
     private SparseArray<RCTLayer> mQueuedLayers;
 
     public RCTSource(Context context) {
         super(context);
-        mLayers = new SparseArray<>();
+        mLayers = new ArrayList<>();
         mQueuedLayers = new SparseArray<>();
     }
 
@@ -40,13 +43,18 @@ public abstract class RCTSource<T extends Source> extends AbstractMapFeature {
         mSource = source;
     }
 
+    public int getLayerCount () {
+        return mLayers.size();
+    }
+
     @Override
     public void addToMap(RCTMGLMapView mapView) {
         mMapView = mapView;
         mMap = mapView.getMapboxMap();
 
-        if (mID.equals(DEFAULT_ID)) {
-            mSource = mMap.getSource(DEFAULT_ID);
+        Source existingSource = mMap.getSource(mID);
+        if (existingSource != null) {
+            mSource = existingSource;
         } else {
             mSource = makeSource();
             mMap.addSource(mSource);
@@ -65,15 +73,14 @@ public abstract class RCTSource<T extends Source> extends AbstractMapFeature {
     public void removeFromMap(RCTMGLMapView mapView) {
         if (mLayers.size() > 0) {
             for (int i = 0; i < mLayers.size(); i++) {
-                RCTLayer layer = mLayers.get(mLayers.keyAt(i));
+                RCTLayer layer = mLayers.get(i);
                 layer.removeFromMap(mMapView);
             }
         }
         mMap.removeSource(mSource);
     }
 
-    @Override
-    public void addView(View childView, int childPosition) {
+    public void addLayer(View childView, int childPosition) {
         if (!(childView instanceof RCTLayer)) {
             return;
         }
@@ -86,12 +93,28 @@ public abstract class RCTSource<T extends Source> extends AbstractMapFeature {
         }
     }
 
+    public void removeLayer(int childPosition) {
+        removeLayerFromMap(mLayers.get(childPosition), childPosition);
+    }
+
+    public RCTLayer getLayerAt(int childPosition) {
+        return mLayers.get(childPosition);
+    }
+
     protected void addLayerToMap(RCTLayer layer, int childPosition) {
         if (mMapView == null || layer == null) {
             return;
         }
         layer.addToMap(mMapView);
-        mLayers.put(childPosition, layer);
+        mLayers.add(childPosition, layer);
+    }
+
+    protected void removeLayerFromMap(RCTLayer layer, int childPosition) {
+        if (mMapView == null || layer == null) {
+            return;
+        }
+        layer.removeFromMap(mMapView);
+        mLayers.remove(childPosition);
     }
 
     public abstract T makeSource();

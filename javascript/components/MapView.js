@@ -10,21 +10,20 @@ import {
   toJSONString,
   getFilter,
   IS_ANDROID,
+  viewPropTypes,
 } from '../utils';
 
 const MapboxGL = NativeModules.MGLModule;
 
 export const NATIVE_MODULE_NAME = 'RCTMGLMapView';
 
-const RCTMGLMapView = requireNativeComponent(NATIVE_MODULE_NAME, MapView, {
-  nativeOnly: { onMapChange: true, onAndroidCallback: true },
-});
-
 /**
  * MapView backed by Mapbox Native GL
  */
 class MapView extends React.Component {
   static propTypes = {
+    ...viewPropTypes,
+
     /**
      * Animates changes between pitch and bearing
      */
@@ -44,6 +43,14 @@ class MapView extends React.Component {
      * The mode used to track the user location on the map
      */
     userTrackingMode: PropTypes.number,
+
+    /**
+     * The distance from the edges of the map view’s frame to the edges of the map view’s logical viewport.
+     */
+    contentInset: PropTypes.oneOfType([
+      PropTypes.arrayOf(PropTypes.number),
+      PropTypes.number,
+    ]),
 
     /**
      * Initial heading on map
@@ -105,6 +112,11 @@ class MapView extends React.Component {
      * Enable/Disable the logo on the map.
      */
     logoEnabled: PropTypes.bool,
+
+    /**
+     * Enable/Disable the compass from appearing on the map
+     */
+    compassEnabled: PropTypes.bool,
 
     /**
      * Map press listener, gets called when a user presses the map
@@ -215,6 +227,19 @@ class MapView extends React.Component {
     this._onAndroidCallback = this._onAndroidCallback.bind(this);
 
     this._callbackMap = new Map();
+  }
+
+  /**
+   * The coordinate bounds(ne, sw) visible in the users’s viewport.
+   *
+   * @example
+   * const visibleBounds = await this._map.getVisibleBounds();
+   *
+   * @return {Array}
+   */
+  async getVisibleBounds () {
+    const res = await this._runNativeCommand('getVisibleBounds');
+    return res.visibleBounds;
   }
 
   /**
@@ -436,7 +461,7 @@ class MapView extends React.Component {
     return this._runNativeCommand('setCamera', [cameraConfig]);
   }
 
-  _runNativeCommand (methodName, args) {
+  _runNativeCommand (methodName, args = []) {
     if (IS_ANDROID) {
       return new Promise ((resolve) => {
         const callbackID = '' + Date.now();
@@ -569,8 +594,21 @@ class MapView extends React.Component {
     return toJSONString((makePoint(this.props.centerCoordinate)));
   }
 
+  _getContentInset () {
+    if (!this.props.contentInset) {
+      return;
+    }
+
+    if (!Array.isArray(this.props.contentInset)) {
+      return [this.props.contentInset];
+    }
+
+    return this.props.contentInset;
+  }
+
   render () {
     let props = {
+      ...this.props,
       animated: this.props.animated,
       centerCoordinate: this._getCenterCoordinate(),
       showUserLocation: this.props.showUserLocation,
@@ -587,6 +625,8 @@ class MapView extends React.Component {
       rotateEnabled: this.props.rotateEnabled,
       attributionEnabled: this.props.attributionEnabled,
       logoEnabled: this.props.logoEnabled,
+      compassEnabled: this.props.compassEnabled,
+      contentInset: this._getContentInset(),
     };
 
     const callbacks = {
@@ -604,5 +644,9 @@ class MapView extends React.Component {
     );
   }
 }
+
+const RCTMGLMapView = requireNativeComponent(NATIVE_MODULE_NAME, MapView, {
+  nativeOnly: { onMapChange: true, onAndroidCallback: true },
+});
 
 export default MapView;

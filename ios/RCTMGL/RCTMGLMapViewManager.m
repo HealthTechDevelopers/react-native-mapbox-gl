@@ -29,6 +29,11 @@ static CGRect const RCT_MAPBOX_MIN_MAP_FRAME = { { 0.0f, 0.0f }, { 64.0f, 64.0f 
 
 RCT_EXPORT_MODULE(RCTMGLMapView)
 
+- (BOOL)requiresMainQueueSetup
+{
+    return YES;
+}
+
 - (UIView *)view
 {
     RCTMGLMapView *mapView = [[RCTMGLMapView alloc] initWithFrame:RCT_MAPBOX_MIN_MAP_FRAME];
@@ -69,7 +74,9 @@ RCT_REMAP_VIEW_PROPERTY(rotateEnabled, reactRotateEnabled, BOOL)
 RCT_REMAP_VIEW_PROPERTY(attributionEnabled, reactAttributionEnabled, BOOL)
 RCT_REMAP_VIEW_PROPERTY(logoEnabled, reactLogoEnabled, BOOL)
 RCT_REMAP_VIEW_PROPERTY(showUserLocation, reactShowUserLocation, BOOL)
+RCT_REMAP_VIEW_PROPERTY(compassEnabled, reactCompassEnabled, BOOL)
 
+RCT_REMAP_VIEW_PROPERTY(contentInset, reactContentInset, NSArray)
 RCT_REMAP_VIEW_PROPERTY(centerCoordinate, reactCenterCoordinate, NSString)
 RCT_REMAP_VIEW_PROPERTY(styleURL, reactStyleURL, NSString)
 
@@ -86,6 +93,23 @@ RCT_EXPORT_VIEW_PROPERTY(onLongPress, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onMapChange, RCTBubblingEventBlock)
 
 #pragma mark - React Methods
+
+RCT_EXPORT_METHOD(getVisibleBounds:(nonnull NSNumber*)reactTag
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *manager, NSDictionary<NSNumber*, UIView*> *viewRegistry) {
+        id view = viewRegistry[reactTag];
+        
+        if (![view isKindOfClass:[RCTMGLMapView class]]) {
+            RCTLogError(@"Invalid react tag, could not find RCTMGLMapView");
+            return;
+        }
+        
+        RCTMGLMapView *reactMapView = (RCTMGLMapView*)view;
+        resolve(@{ @"visibleBounds": [RCTMGLUtils fromCoordinateBounds:reactMapView.visibleCoordinateBounds] });
+    }];
+}
 
 RCT_EXPORT_METHOD(queryRenderedFeaturesAtPoint:(nonnull NSNumber*)reactTag
                   atPoint:(NSArray<NSNumber*>*)point
@@ -361,7 +385,8 @@ RCT_EXPORT_METHOD(setCamera:(nonnull NSNumber*)reactTag
                             @"zoomLevel": [NSNumber numberWithDouble:mapView.zoomLevel],
                             @"heading": [NSNumber numberWithDouble:mapView.camera.heading],
                             @"pitch": [NSNumber numberWithDouble:mapView.camera.pitch],
-                            @"animated": [NSNumber numberWithBool:animated]
+                            @"animated": [NSNumber numberWithBool:animated],
+                            @"visibleBounds": [RCTMGLUtils fromCoordinateBounds:mapView.visibleCoordinateBounds]
                          };
     return feature.geoJSONDictionary;
 }
