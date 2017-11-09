@@ -24,6 +24,6 @@ public class RCTMGLVectorSource extends RCTSource<VectorSource> {
         if (isDefaultSource(mID)) {
             return (VectorSource)mMap.getSource(DEFAULT_ID);
         }
-        return new VectorSource(mID, mURL);
+        return new VectorSource(mID, new TileSet("2.1.0", mURL));
     }
 }
