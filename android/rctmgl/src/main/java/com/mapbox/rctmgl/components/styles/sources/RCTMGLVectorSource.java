@@ -2,6 +2,7 @@ package com.mapbox.rctmgl.components.styles.sources;
 
 import android.content.Context;
 
+import com.mapbox.mapboxsdk.style.sources.TileSet;
 import com.mapbox.mapboxsdk.style.sources.VectorSource;
 
 /**
