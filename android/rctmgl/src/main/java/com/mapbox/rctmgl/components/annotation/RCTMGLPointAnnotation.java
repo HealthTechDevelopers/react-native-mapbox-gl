@@ -3,6 +3,7 @@ package com.mapbox.rctmgl.components.annotation;
 import android.content.Context;
 import android.graphics.PointF;
 import android.view.MotionEvent;
+import android.os.Handler;
 import android.view.View;
 
 import com.mapbox.mapboxsdk.annotations.Marker;
@@ -174,7 +175,8 @@ public class RCTMGLPointAnnotation extends AbstractMapFeature {
 
         final RCTMGLPointAnnotation self = this;
         if (mIsSelected) {
-            post(new Runnable() {
+            Handler handle = new Handler();
+            handle.post(new Runnable() {
                 @Override
                 public void run() {
                     mMapView.selectAnnotation(self);
