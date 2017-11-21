@@ -48,7 +48,14 @@ RCT_EXPORT_MODULE(RCTMGLMapView)
     [tap requireGestureRecognizerToFail:doubleTap];
     
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(didLongPressMap:)];
+  
+    for (int i = 0; i < mapView.gestureRecognizers.count; i++) {
+        UIGestureRecognizer *gestuerReconginer = mapView.gestureRecognizers[i];
 
+        if ([gestuerReconginer isKindOfClass:[UITapGestureRecognizer class]]) {
+            [tap requireGestureRecognizerToFail:gestuerReconginer];
+        }
+    }
     [mapView addGestureRecognizer:doubleTap];
     [mapView addGestureRecognizer:tap];
     [mapView addGestureRecognizer:longPress];
